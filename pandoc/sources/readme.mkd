@@ -1,0 +1,18 @@
+---
+title: podman-proxy
+description: A Unix socket proxy that enforces a sandbox mount policy on Podman container create requests
+---
+
+# podman-proxy
+
+<!-- include:pandoc/sources/themes/scope.mkd -->
+
+<!-- include:pandoc/sources/themes/installation.mkd -->
+
+<!-- include:pandoc/sources/themes/usage.mkd -->
+
+<!-- include:pandoc/sources/themes/architecture.mkd -->
+
+## Development
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for development environment setup, testing, linting, and conventions.

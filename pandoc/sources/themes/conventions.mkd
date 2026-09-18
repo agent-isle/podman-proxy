@@ -1,0 +1,38 @@
+# Conventions
+
+::: {.contributing}
+## Code conventions
+
+- No globals --- pass deps explicitly
+- `anyhow::Result` for error handling
+- `serde` for JSON deserialisation
+- `tracing` for structured logging
+- rustfmt formatting
+- clippy linting
+- Table-driven tests
+- Per-module `*.rs.md` documentation companions kept in sync with the code
+- Source files stay under the 500-line limit enforced by the pre-commit hook
+:::
+
+## Updating documentation
+
+::: {.agent}
+Each `.rs` module has a companion `.rs.md` file describing its concern.
+When you change a module, update its companion and run:
+
+```bash
+source scripts/ai-dev-env.sh
+panache format .
+lychee .
+```
+:::
+
+::: {.contributing}
+Each `.rs` module has a companion `.rs.md` file describing its concern.
+When you change a module, update its companion and run:
+
+```bash
+panache format .
+lychee .
+```
+:::

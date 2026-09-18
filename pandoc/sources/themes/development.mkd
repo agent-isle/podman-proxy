@@ -1,0 +1,85 @@
+# Development
+
+::: {.agent}
+## Commands
+
+```bash
+cargo build                            # development build
+cargo test                             # test
+cargo clippy --all-targets             # lint
+cargo fmt                              # format
+panache format .                       # format markdown
+```
+
+## Git hooks
+
+Git hooks enforce formatting, linting, link checking, and tests automatically.
+
+  | Hook         | When               | Checks                                                                      |
+  | ------------ | ------------------ | --------------------------------------------------------------------------- |
+  | `pre-commit` | Before each commit | `cargo fmt --check`, `cargo clippy`, `panache format --check .`, `lychee .` |
+  | `pre-push`   | Before each push   | `cargo test`                                                                |
+
+Run the setup script once:
+
+```bash
+scripts/setup-githooks.sh
+```
+:::
+
+::: {.contributing}
+## Development dependencies
+
+With Nix, enter the dev shell to get all tools:
+
+```bash
+nix develop
+```
+
+Without Nix, install these tools manually:
+
+  | Tool                                            | Purpose                     |
+  | ----------------------------------------------- | --------------------------- |
+  | [Rust](https://rustup.rs/) 1.80+                | Compiler                    |
+  | [clippy](https://doc.rust-lang.org/clippy/)     | Linting                     |
+  | [rustfmt](https://github.com/rust-lang/rustfmt) | Formatting                  |
+  | [panache](https://panache.bz)                   | Markdown formatting/linting |
+  | [lychee](https://github.com/lycheeverse/lychee) | Link checking               |
+
+## Development build
+
+```bash
+cargo build
+```
+
+## Running tests
+
+```bash
+cargo test
+```
+
+## Linting
+
+```bash
+cargo clippy --all-targets
+cargo fmt --check
+panache format --check .
+```
+
+## Git hooks
+
+Git hooks enforce formatting, linting, link checking, and tests automatically.
+
+  | Hook         | When               | Checks                                                                      |
+  | ------------ | ------------------ | --------------------------------------------------------------------------- |
+  | `pre-commit` | Before each commit | `cargo fmt --check`, `cargo clippy`, `panache format --check .`, `lychee .` |
+  | `pre-push`   | Before each push   | `cargo test`                                                                |
+
+With Nix, hooks are configured automatically when entering the dev shell.
+
+Without Nix, run the setup script once:
+
+```bash
+scripts/setup-githooks.sh
+```
+:::

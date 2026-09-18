@@ -1,0 +1,76 @@
+# Installation
+
+## NixOS
+
+All dependencies are handled automatically by Nix.
+
+### System-wide (configuration.nix)
+
+Add podman-proxy as a flake input and configure it in your system:
+
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    podman-proxy.url = "github:agent-isle/podman-proxy";
+    podman-proxy.inputs.nixpkgs.follows = nixpkgs;
+  };
+
+  outputs = { self, nixpkgs, podman-proxy, ... }: {
+    nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        {
+          environment.systemPackages = [ podman-proxy.packages.x86_64-linux.default ];
+        }
+      ];
+    };
+  };
+}
+```
+
+### Per-user (Home Manager)
+
+Add to your Home Manager configuration:
+
+```nix
+{ inputs, ... }:
+
+{
+  home.packages = [
+    inputs.podman-proxy.packages.x86_64-linux.default
+  ];
+}
+```
+
+Or build and install manually:
+
+```bash
+nix build
+cp ./result/bin/podman-proxy ~/.local/bin/
+```
+
+## Generic Linux
+
+Requires Rust 1.80+.
+
+Install with Cargo:
+
+```bash
+cargo install --path .
+```
+
+Or build and copy manually:
+
+```bash
+cargo build --release
+cp target/release/podman-proxy ~/.local/bin/
+```
+
+## Post-install verification
+
+```bash
+podman-proxy --help
+```
+
+This should display the help message with available flags.

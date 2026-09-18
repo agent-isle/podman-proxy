@@ -1,0 +1,62 @@
+# Architecture
+
+::: {.agent .contributing}
+## Project Structure
+
+```
+src/
+  lib.rs                Crate root, deny lints, public API (start_proxy, SandboxMount)
+  main.rs               Standalone executable CLI
+  proxy.rs              Mount policy enforcement, request orchestration
+  transport.rs          Raw socket HTTP forwarding and response writing
+  parse.rs              HTTP-over-Unix-socket request parser
+  http.rs               Podman API route and path utilities
+  secret_detection.rs   Sandbox mount policy: secrets, allowlist, read-only flags
+  types.rs              Serde types for the Podman container create API
+  *.rs.md               Per-module documentation companions
+tests/
+  proxy_integration.rs  End-to-end proxy behavior tests
+  proxy_eof_integration.rs  Keep-alive / EOF propagation tests
+  support/              Mock Podman backend helpers
+flake.nix               Nix build
+```
+:::
+
+::: {.agent .contributing}
+## Public API
+
+The library exposes two items at the crate root:
+
+- `start_proxy(listen_path, real_path, secrets, allowed_mounts) -> Result<impl FnOnce()>`
+- `SandboxMount { host: String, read_only: bool }`
+
+The standalone executable (`src/main.rs`) wraps `start_proxy` behind a clap CLI.
+:::
+
+::: {.agent .contributing}
+## Podman mount policy
+
+A bind source is rejected when it:
+
+1. is or contains a known secret file
+2. lies outside the authorized host mounts (it must be an allowed mount or a descendant of one)
+3. mounts a read-only allowed mount read-write
+4. does not exist on the host (podman would otherwise create it)
+
+Sources are canonicalised (`realpath`) before matching so symlinks and `..` segments cannot bypass the checks.
+:::
+
+::: {.readme}
+## Files
+
+  | File                                                       | Concern                                                   |
+  | ---------------------------------------------------------- | --------------------------------------------------------- |
+  | [`src/lib.rs.md`](src/lib.rs.md)                           | Crate root, public API                                    |
+  | [`src/main.rs.md`](src/main.rs.md)                         | Standalone executable CLI                                 |
+  | [`src/proxy.rs.md`](src/proxy.rs.md)                       | Mount policy enforcement, request orchestration           |
+  | [`src/transport.rs.md`](src/transport.rs.md)               | Raw socket HTTP forwarding and response writing           |
+  | [`src/parse.rs.md`](src/parse.rs.md)                       | HTTP-over-Unix-socket request parser                      |
+  | [`src/secret_detection.rs.md`](src/secret_detection.rs.md) | Sandbox mount policy: secrets, allowlist, read-only flags |
+  | [`src/http.rs.md`](src/http.rs.md)                         | Podman API route and path utilities                       |
+  | [`src/types.rs.md`](src/types.rs.md)                       | Serde types for Podman container create API               |
+:::

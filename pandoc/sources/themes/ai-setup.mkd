@@ -1,0 +1,30 @@
+# Session Setup
+
+::: {.agent}
+Before working on this project, you must load the development environment.
+This makes all required tools (`cargo`, `clippy`, `rustfmt`, `panache`, `lychee`) available in your PATH.
+
+Run this before any other command:
+
+```bash
+source scripts/ai-dev-env.sh
+```
+
+This is the only way to access the development tools if you are inside a Nix shell.
+If your environment does not persist variables between tool invocations, source the script and run the command in the same invocation, e.g.:
+
+```bash
+source scripts/ai-dev-env.sh && cargo build
+```
+
+If `ai-dev-env.sh` does not exist yet, generate it from the flake (run once):
+
+```bash
+nix print-dev-env > ./scripts/ai-dev-env.sh
+```
+
+## Constraints
+
+- Do not run `nix` commands unless you have permission.
+- Do not run `git` commands --- the user operates git.
+:::

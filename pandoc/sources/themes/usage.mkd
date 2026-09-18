@@ -1,0 +1,47 @@
+# Usage
+
+## Library usage
+
+podman-proxy provides both a **library** (`start_proxy`, `SandboxMount`) for embedding in host applications (e.g. agent-isle) and a standalone **executable** to launch the proxy independently.
+
+```rust
+use podman_proxy::{start_proxy, SandboxMount};
+
+let stop = start_proxy(
+    "/run/user/1000/agent/podman-proxy.sock", // proxy listen path
+    "/run/user/1000/podman/podman.sock",      // real podman socket
+    vec!["/home/user/.ssh/id_rsa".to_string()], // secret files to protect
+    vec![SandboxMount { host: "/home/user/project".into(), read_only: false }],
+)?;
+// ... run ...
+stop();
+```
+
+## Standalone executable
+
+Launch the proxy independently from the command line:
+
+```text
+podman-proxy \
+  --listen /run/user/1000/podman-proxy.sock \
+  --real /run/user/1000/podman/podman.sock \
+  --secret-file /home/user/.ssh/id_rsa \
+  --allowed-mount /home/user/project \
+  --allowed-mount /home/user/config:ro
+```
+
+  | Flag                                | Description                                                                                            |
+  | ----------------------------------- | ------------------------------------------------------------------------------------------------------ |
+  | `--listen <path>`                   | Path for the proxy's listening socket (default `$XDG_RUNTIME_DIR/podman-proxy.sock`)                   |
+  | `--real` / `--podman-socket <path>` | Path of the real Podman socket to forward to                                                           |
+  | `--secret-file <path>`              | Host path of a secret file to protect; repeatable                                                      |
+  | `--allowed-mount <host>[:ro]`       | Host path authorized for container bind mounts; append `:ro` to allow only read-only binds; repeatable |
+
+A bound source is rejected when it:
+
+1. is or contains a known secret file
+2. lies outside the sandbox's own host mounts (it must be a sandbox mount or a descendant of one)
+3. mounts a read-only sandbox tree read-write
+4. does not exist on the host (podman would otherwise create it)
+
+Sources are canonicalised (`realpath`) before matching so symlinks and `..` segments cannot bypass the checks.
