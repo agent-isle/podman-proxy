@@ -11,6 +11,8 @@ description: A Unix socket proxy that enforces a sandbox mount policy on Podman 
 
 <!-- include:pandoc/sources/themes/usage.mkd -->
 
+<!-- include:pandoc/sources/themes/library.mkd -->
+
 <!-- include:pandoc/sources/themes/architecture.mkd -->
 
 ## Development

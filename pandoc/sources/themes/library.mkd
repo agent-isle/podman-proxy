@@ -1,0 +1,71 @@
+# Library contract
+
+The crate-root re-exports are the frozen public surface, stable under SemVer:
+
+```rust
+pub fn start_proxy(
+    listen_path: &str,
+    real_path: &str,
+    secrets: Vec<String>,
+    allowed_mounts: Vec<SandboxMount>,
+) -> Result<impl FnOnce()>
+```
+
+```rust
+pub struct SandboxMount {
+    pub host: String,
+    pub read_only: bool,
+}
+```
+
+`SandboxMount` derives `Debug`, `Clone`, `PartialEq`, and `Eq`.
+The `proxy` and `types` modules stay reachable, but consumers should import the crate-root re-exports only.
+
+## Semantics
+
+- `listen_path` --- Unix socket path the proxy binds; missing parent directories are created and the socket is chmod'd `0700`.
+- `real_path` --- the real Podman socket all traffic is forwarded to.
+- `secrets` --- host paths of secret files; a bind source equal to or containing one is rejected.
+- `allowed_mounts` --- the authorized host surface.
+  A bind source must equal an allowed mount or be a descendant of one, must respect the read-only inheritance, and must exist on the host.
+  - A source covered by a read-only allowed mount cannot be mounted read-write (the most restrictive covering mount wins).
+  - Sources are canonicalized (`realpath`, with a textual fallback) before matching, so symlinks and `..` segments cannot bypass the checks.
+
+## Behavior
+
+Only container `create` requests are validated; all other traffic is forwarded verbatim.
+A violating create gets an HTTP `403` with a body `container mounts violate sandbox policy: <reason>`.
+
+## Lifecycle
+
+`start_proxy` spawns background threads and returns a stop closure:
+
+```rust
+let stop = start_proxy(...)?;
+stop(); // joins the listener and removes the listen socket
+```
+
+Consumers call the closure exactly once on teardown, and should wait for the listen socket to appear before connecting clients.
+
+## Version pinning
+
+Consumers pin podman-proxy by git tag, never by branch: tags are immutable, so the pinned revision cannot drift.
+
+Cargo (what agent-isle uses):
+
+```toml
+podman-proxy = { git = "https://github.com/agent-isle/podman-proxy", tag = "v0.1.0", optional = true }
+```
+
+`Cargo.lock` records the exact commit for the tag; `cargo update -p podman-proxy` advances only within the pinned tag.
+
+Nix:
+
+Nix consumers pin through Cargo, not through a flake input: the git tag is resolved during the vendored cargo fetch (for example, `buildRustPackage`'s `cargoHash` step), exactly as Cargo does.
+A flake input pointing at the same tag may be declared for documentation, but it is not consumed by the build and must be kept in sync with the Cargo `tag`.
+
+## Release workflow
+
+1. Bump the version in `Cargo.toml` and `flake.nix`.
+2. Tag the release on GitHub: `vX.Y.Z`.
+3. Consumers update the Cargo `tag` (and, if they declared a documentation flake input, its ref), then refresh their lockfiles.
